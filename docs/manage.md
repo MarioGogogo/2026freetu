@@ -6,6 +6,9 @@
 <img src="./img/d10.png"   height="50%" width="50%"/>
 
 2. 执行sql命令创建表（在控制台输入框粘贴下面语句执行即可）
+
+**⚠️ 重要：请一次性执行全部SQL语句，确保两个表都创建成功**
+
 ```sql
 DROP TABLE IF EXISTS tgimglog;
 CREATE TABLE IF NOT EXISTS tgimglog (
@@ -27,17 +30,27 @@ CREATE TABLE IF NOT EXISTS imginfo (
 );
 ```
 
+3. **验证表是否创建成功**（重要！）
+
+执行以下查询确认表已创建：
+
+```sql
+SELECT name FROM sqlite_master WHERE type='table';
+```
+
+应该返回 `imginfo` 和 `tgimglog` 两个表名。如果缺少任何一个，请重新执行第2步的SQL。
+
 <img src="./img/d3.png"   height="50%" width="50%"/>
 <img src="./img/d4.png"   height="50%" width="50%"/>
 <img src="./img/d5.png"   height="50%" width="50%"/>
 
-3. 选择部署完成`telegraph-Image`项目，前往后台依次点击`设置`->`函数`->`D1 数据库绑定`->`编辑绑定`->`变量名称填写`：`IMG` 命名空间 选择你提前创建好的D1 数据库绑定
+4. 选择部署完成`telegraph-Image`项目，前往后台依次点击`设置`->`函数`->`D1 数据库绑定`->`编辑绑定`->`变量名称填写`：`IMG` 命名空间 选择你提前创建好的D1 数据库绑定
 
-4. 配置`Cloudflare R2`,前往后台依次点击`设置`->`函数`->`R2 存储桶绑定`->`编辑绑定`->`变量名称填写`：`IMGRS` 命名空间 选择你提前创建好的R2 存储桶绑定
+5. 配置`Cloudflare R2`,前往后台依次点击`设置`->`函数`->`R2 存储桶绑定`->`编辑绑定`->`变量名称填写`：`IMGRS` 命名空间 选择你提前创建好的R2 存储桶绑定
 
 <img src="./img/d6.png"   height="50%" width="50%"/>
 
-5. 后台管理页面新增登录验证功能，默认也是关闭的，如需开启请部署完成后前往后台依次点击`设置`->`环境变量`->`为生产环境定义变量`->`编辑变量` 添加如下表格所示的变量即可开启登录验证
+6. 后台管理页面新增登录验证功能，默认也是关闭的，如需开启请部署完成后前往后台依次点击`设置`->`环境变量`->`为生产环境定义变量`->`编辑变量` 添加如下表格所示的变量即可开启登录验证
 
 *[鉴黄api部署](https://github.com/x-dr/nsfwjs-api)*
 
@@ -75,9 +88,6 @@ CREATE TABLE IF NOT EXISTS imginfo (
 
 
 
-6. 返回最新部署完成`telegraph-Image`项目后台点击`重试部署` 使环境变量生效
-<img src="./img/d1end.png"   height="50%" width="50%"/>
-
-## 返回最新部署完成`telegraph-Image`项目后台点击`重试部署` 使环境变量生效
+7. 返回最新部署完成`telegraph-Image`项目后台点击`重试部署` 使环境变量生效
 <img src="./img/d1end.png"   height="50%" width="50%"/>
 
