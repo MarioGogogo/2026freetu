@@ -29,20 +29,27 @@ export default function Admin() {
         },
         body: JSON.stringify({
           page: (page - 1),
-          query: searchQuery, // 传递搜索查询
+          query: searchQuery,
         })
       })
+
+      if (!res.ok) {
+        const errorText = await res.text()
+        throw new Error(`HTTP ${res.status}: ${errorText}`)
+      }
+
       const res_data = await res.json()
       if (!res_data?.success) {
         toast.error(res_data.message)
       } else {
-        setListData(res_data.data)
+        setListData(res_data.data || [])
         const totalPages = Math.ceil(res_data.total / 10);
         setSearchTotal(totalPages);
       }
 
     } catch (error) {
-      toast.error(error.message)
+      console.error('API Error:', error)
+      toast.error(`请求失败: ${error.message}`)
     }
 
   })

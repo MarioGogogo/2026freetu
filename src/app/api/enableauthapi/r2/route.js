@@ -140,9 +140,9 @@ export async function POST(request) {
 
 
 
-async function insertImageData(env, src, referer, ip, rating, time) {
+async function insertImageData(DB, src, referer, ip, rating, time) {
 	try {
-		const instdata = await env.prepare(
+		const instdata = await DB.prepare(
 			`INSERT INTO imginfo (url, referer, ip, rating, total, time)
            VALUES ('${src}', '${referer}', '${ip}', ${rating}, 1, '${time}')`
 		).run()
