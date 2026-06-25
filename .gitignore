@@ -45,4 +45,4 @@ next-env.d.ts
 .wrangler/
 
 app/deva
-src/app/deva/*
+src/app/deva/*.env.example
