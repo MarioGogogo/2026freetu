@@ -1,6 +1,7 @@
 'use client'
 import { signOut } from "next-auth/react"
 import Table from "@/components/Table"
+import ThemeToggle from "@/components/ThemeToggle"
 import { useState, useEffect, useCallback } from 'react';
 import { ToastContainer, toast } from "react-toastify";
 import Link from 'next/link'
@@ -110,12 +111,13 @@ export default function Admin() {
   return (
     <>
       <div className="overflow-auto h-full flex w-full min-h-screen flex-col items-center justify-between">
-        <header className="fixed top-0 h-[50px]  left-0 w-full border-b bg-white flex z-50 justify-center items-center">
+        <header className="fixed top-0 h-[50px] left-0 w-full border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex z-50 justify-center items-center transition-colors duration-300">
           <div className="flex justify-between items-center w-full max-w-4xl px-4">
             <button className='text-white px-4 py-2  transition ease-in-out delay-150 bg-blue-500 hover:scale-110 hover:bg-indigo-500 duration-300  rounded '
               onClick={handleViewToggle}>
               切换到 {view === 'list' ? '日志页' : '数据页'}
             </button>
+            <ThemeToggle />
             <form onSubmit={handleSearch} className="hidden sm:flex items-center">
               <input
                 type="text"
@@ -133,12 +135,12 @@ export default function Admin() {
           <button onClick={() => signOut({ callbackUrl: "/" })} className="px-4 py-2 mx-2 w-28  sm:w-28 md:w-20 lg:w-16 xl:w-16  2xl:w-20 bg-blue-500 text-white rounded ">登出</button>
         </header>
 
-        <main className="my-[60px] w-9/10  sm:w-9/10 md:w-9/10 lg:w-9/10 xl:w-3/5 2xl:w-full">
+        <main className="my-[60px] w-9/10 sm:w-9/10 md:w-9/10 lg:w-9/10 xl:w-3/5 2xl:w-full text-gray-800 dark:text-gray-100 transition-colors duration-300">
 
           <Table data={listData} />
 
         </main>
-        <div className="fixed inset-x-0 bottom-0 h-[50px]  w-full  flex  z-50 justify-center items-center bg-white ">
+        <div className="fixed inset-x-0 bottom-0 h-[50px] w-full flex z-50 justify-center items-center bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 transition-colors duration-300">
           <div className="pagination mt-5 mb-5 flex justify-center items-center">
             <button className=' text-xs sm:text-sm transition ease-in-out delay-150 bg-blue-500  hover:scale-110 hover:bg-indigo-500 duration-300p-2 p-2 rounded mr-5' onClick={handlePrevPage} disabled={currentPage === 1}>
               上一页

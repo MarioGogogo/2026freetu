@@ -150,7 +150,7 @@ async function logRequest(env, name, referer, ip) {
   try {
     const nowTime = await get_nowTime()
     await insertTgImgLog(env.IMG, `/rfile/${name}`, referer, ip, nowTime);
-    const setData = await env.IMG.prepare(`UPDATE imginfo SET total = total +1 WHERE url = '/rfile/${name}';`).run()
+    const setData = await env.IMG.prepare(`UPDATE imginfo SET total = total +1 WHERE url = ?`).bind(`/rfile/${name}`).run()
   } catch (error) {
     console.error('Error logging request:', error);
   }
@@ -160,7 +160,7 @@ async function logRequest(env, name, referer, ip) {
 
 // 从数据库获取鉴黄信息
 async function getRating(DB, url) {
-  const ps = DB.prepare(`SELECT rating FROM imginfo WHERE url='${url}'`);
+  const ps = DB.prepare(`SELECT rating FROM imginfo WHERE url = ?`).bind(url);
   const result = await ps.first();
   return result ? result.rating : null;
 }

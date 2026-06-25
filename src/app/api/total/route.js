@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { headers } from 'next/headers'
 import { getRequestContext } from '@cloudflare/next-on-pages';
+import { mockTotal, mockEnabled } from '@/lib/mock';
 
 // ...
 
@@ -14,6 +15,9 @@ const corsHeaders = {
 export const runtime = 'edge';
 export async function GET(request) {
   // 获取客户端的IP地址
+  if (mockEnabled()) {
+    return Response.json({ code: 200, success: true, message: 'success', total: mockTotal() });
+  }
   const { env, cf, ctx } = getRequestContext();
   // console.log(dd);
   let totalImg = {

@@ -48,7 +48,7 @@ export async function GET(request, { params }) {
       if (rating) {
         try {
           // UPDATE imginfo SET total = total +2 WHERE url = '/file/d71ebe27cab32a2f61e25.png';
-          const setData = await env.IMG.prepare(`UPDATE imginfo SET total = total +1 WHERE url = '/file/${name}';`).run()
+          const setData = await env.IMG.prepare(`UPDATE imginfo SET total = total +1 WHERE url = ?`).bind(`/file/${name}`).run()
           // console.log(setData);
         } catch (error) {
           console.log(error);
@@ -124,8 +124,8 @@ async function insertImgInfo(DB, url, referer, ip, rating,  time) {
   try {
     const instdata = await DB.prepare(
       `INSERT INTO imginfo (url, referer, ip, rating, total, time)
-           VALUES ('${url}', '${referer}', '${ip}', ${rating}, 1, '${time}')`
-    ).run()
+           VALUES (?, ?, ?, ?, 1, ?)`
+    ).bind(url, referer, ip, rating, time).run()
   } catch (error) {
 
   };
@@ -137,7 +137,7 @@ async function insertImgInfo(DB, url, referer, ip, rating,  time) {
 
 // 从数据库获取鉴黄信息
 async function getRating(DB, url) {
-  const ps = DB.prepare(`SELECT rating FROM imginfo WHERE url='${url}'`);
+  const ps = DB.prepare(`SELECT rating FROM imginfo WHERE url = ?`).bind(url);
   const result = await ps.first();
   return result;
 }

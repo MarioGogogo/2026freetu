@@ -165,17 +165,17 @@ export default function Table({ data: initialData = [] }) {
     const elementSize = 400;
     return (
         <div className="mx-2">
-            <table className="min-w-full bg-white  items-center justify-between ">
+            <table className="min-w-full bg-white dark:bg-slate-900 items-center justify-between transition-colors duration-300">
                 <thead >
-                    <tr className="sticky top-0 bg-gray-100 z-20">
-                        <th className=" py-2 px-4 border-b border-gray-200 bg-gray-100  text-center text-sm font-semibold text-gray-600">name</th>
-                        <th className="sticky left-0 z-10 py-2 px-4 border-b border-gray-200 bg-gray-100 text-center text-sm font-semibold text-gray-600">preview</th>
-                        <th className=" py-2 px-4 border-b border-gray-200 bg-gray-100  text-center text-sm font-semibold text-gray-600">time</th>
-                        <th className=" py-2 px-4 border-b border-gray-200 bg-gray-100  text-center text-sm font-semibold text-gray-600">referer</th>
-                        <th className=" py-2 px-4 border-b border-gray-200 bg-gray-100  text-center text-sm font-semibold text-gray-600">ip</th>
-                        <th className=" py-2 px-4 border-b border-gray-200 bg-gray-100  text-center text-sm font-semibold text-gray-600">PV</th>
-                        <th className=" py-2 px-4 border-b border-gray-200 bg-gray-100  text-center text-sm font-semibold text-gray-600">rating</th>
-                        <th className="sticky  right-0 z-10 py-2 px-4 border-b border-gray-200 bg-gray-100  text-center text-sm font-semibold text-gray-600">限制访问</th>
+                    <tr className="sticky top-0 bg-gray-100 dark:bg-slate-800 z-20">
+                        <th className=" py-2 px-4 border-b border-gray-200 bg-gray-100 dark:bg-slate-800 text-center text-sm font-semibold text-gray-600 dark:text-gray-300">name</th>
+                        <th className="sticky left-0 z-10 py-2 px-4 border-b border-gray-200 bg-gray-100 dark:bg-slate-800 text-center text-sm font-semibold text-gray-600 dark:text-gray-300">preview</th>
+                        <th className=" py-2 px-4 border-b border-gray-200 bg-gray-100 dark:bg-slate-800 text-center text-sm font-semibold text-gray-600 dark:text-gray-300">time</th>
+                        <th className=" py-2 px-4 border-b border-gray-200 bg-gray-100 dark:bg-slate-800 text-center text-sm font-semibold text-gray-600 dark:text-gray-300">referer</th>
+                        <th className=" py-2 px-4 border-b border-gray-200 bg-gray-100 dark:bg-slate-800 text-center text-sm font-semibold text-gray-600 dark:text-gray-300">ip</th>
+                        <th className=" py-2 px-4 border-b border-gray-200 bg-gray-100 dark:bg-slate-800 text-center text-sm font-semibold text-gray-600 dark:text-gray-300">PV</th>
+                        <th className=" py-2 px-4 border-b border-gray-200 bg-gray-100 dark:bg-slate-800 text-center text-sm font-semibold text-gray-600 dark:text-gray-300">rating</th>
+                        <th className="sticky  right-0 z-10 py-2 px-4 border-b border-gray-200 bg-gray-100 dark:bg-slate-800 text-center text-sm font-semibold text-gray-600 dark:text-gray-300">限制访问</th>
                     </tr>
                 </thead>
                 <tbody >
@@ -223,11 +223,11 @@ export default function Table({ data: initialData = [] }) {
 
                             <tr key={index}>
 
-                                <td onClick={() => handleNameClick(item)} className="text-center py-2 px-4 border-b border-gray-200 text-sm text-gray-700 truncate max-w-48">
+                                <td onClick={() => handleNameClick(item)} className="text-center py-2 px-4 border-b border-gray-200 text-sm text-gray-700 dark:text-gray-200 truncate max-w-48">
                                     {item.url}
                                 </td>
                                 <td
-                                    className="w-20 h-20 sticky left-0 z-10   py-2 px-4 border-b border-gray-500 bg-white text-sm text-gray-700"
+                                    className="w-20 h-20 sticky left-0 z-10   py-2 px-4 border-b border-gray-500 bg-white text-sm text-gray-700 dark:text-gray-200"
                                 >
 
                                     {
@@ -241,7 +241,7 @@ export default function Table({ data: initialData = [] }) {
                                                     const offset = (width - elementSize) / elementSize;
                                                     const childScale = scale === 1 ? scale + offset : 1 + offset;
                                                     return (
-                                                        <div {...attrs} className={`flex-none bg-white ${attrs.className || ''}`}>
+                                                        <div {...attrs} className={`flex-none bg-white dark:bg-slate-800 ${attrs.className || ''}`}>
                                                             {renderFile(getImgUrl(item.url), index)}
                                                         </div>
                                                     )
@@ -261,18 +261,18 @@ export default function Table({ data: initialData = [] }) {
                                     }
 
                                 </td>
-                                <td className="text-center py-2 px-4 border-b border-gray-200 text-sm text-gray-700 max-w-48">
+                                <td className="text-center py-2 px-4 border-b border-gray-200 text-sm text-gray-700 dark:text-gray-200 max-w-48">
                                     {item.time}
                                 </td>
-                                <td className="text-center py-2 px-4 border-b border-gray-200 text-sm text-gray-700 max-w-48 break-all">
+                                <td className="text-center py-2 px-4 border-b border-gray-200 text-sm text-gray-700 dark:text-gray-200 max-w-48 break-all">
                                     <TooltipItem tooltipsText={item.referer} position="bottom" >{item.referer}</TooltipItem>
                                 </td>
-                                <td className="text-center py-2 px-4 border-b border-gray-200 text-sm text-gray-700 max-w-48 ">
+                                <td className="text-center py-2 px-4 border-b border-gray-200 text-sm text-gray-700 dark:text-gray-200 max-w-48 ">
                                     <TooltipItem tooltipsText={item.ip} position="bottom" >{item.ip}</TooltipItem>
                                 </td>
-                                <td className="text-center py-2 px-4 border-b border-gray-200 text-sm text-gray-700 max-w-2 ">{item.total}</td>
-                                <td className="text-center py-2 px-4 border-b border-gray-200 text-sm text-gray-700 max-w-2 ">{item.rating}</td>
-                                <td className="sticky  right-0 z-10 bg-white text-center py-2 px-4 border-b border-gray-200 text-sm text-gray-700">
+                                <td className="text-center py-2 px-4 border-b border-gray-200 text-sm text-gray-700 dark:text-gray-200 max-w-2 ">{item.total}</td>
+                                <td className="text-center py-2 px-4 border-b border-gray-200 text-sm text-gray-700 dark:text-gray-200 max-w-2 ">{item.rating}</td>
+                                <td className="sticky right-0 z-10 bg-white dark:bg-slate-900 text-center py-2 px-4 border-b border-gray-200 dark:border-slate-700 text-sm text-gray-700 dark:text-gray-200 transition-colors duration-300">
                                     <div className="flex flex-row justify-center">
                                         <Switcher initialChecked={item.rating} initName={item.url} />
                                         <button
@@ -297,7 +297,7 @@ export default function Table({ data: initialData = [] }) {
             {modalData && (
                 <div onClick={handleClickOutside} className="fixed z-50 inset-0 overflow-y-auto flex items-center justify-center m-5 ">
                     <div className="fixed inset-0 bg-black opacity-75"></div>
-                    <div ref={modalRef} className="bg-white rounded-lg flex-none flex flex-col h-1/2 relative w-9/10 sm:w-9/10 md:w-96 lg:w-120 xl:w-144 2xl:w-160">
+                    <div ref={modalRef} className="bg-white dark:bg-slate-800 rounded-lg flex-none flex flex-col h-1/2 relative w-9/10 sm:w-9/10 md:w-96 lg:w-120 xl:w-144 2xl:w-160 transition-colors duration-300">
                         <button className="absolute top-2 right-2 ring-2 text-red-600 hover:text-red-800" onClick={handleCloseModal}>
                             <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -315,7 +315,7 @@ export default function Table({ data: initialData = [] }) {
                                     readOnly
                                     value={item.text}
                                     onClick={item.onClick}
-                                    className="mx-2 px-3 my-1 py-2 border border-gray-300 rounded-lg bg-white text-sm text-gray-800 focus:outline-none placeholder-gray-400"
+                                    className="mx-2 px-3 my-1 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm text-gray-800 dark:text-gray-100 focus:outline-none placeholder-gray-400 transition-colors duration-300"
                                 />
 
 

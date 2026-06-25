@@ -10,6 +10,7 @@ import { useEffect } from 'react';
 import Footer from '@/components/Footer'
 import Link from "next/link";
 import LoadingOverlay from "@/components/LoadingOverlay";
+import ThemeToggle from "@/components/ThemeToggle";
 
 
 const LoginButton = ({ onClick, href, children }) => (
@@ -31,7 +32,7 @@ export default function Home() {
   const [uploading, setUploading] = useState(false);
   const [IP, setIP] = useState('');
   const [Total, setTotal] = useState('?');
-  const [selectedOption, setSelectedOption] = useState('tgchannel'); // 初始选择第一个选项
+  const [selectedOption, setSelectedOption] = useState('r2'); // 初始选择第一个选项
   const [isAuthapi, setisAuthapi] = useState(false); // 初始选择第一个选项
   const [Loginuser, setLoginuser] = useState(''); // 初始选择第一个选项
   const [boxType, setBoxtype] = useState("img");
@@ -403,7 +404,7 @@ export default function Home() {
         );
       case 'htmlLinks':
         return (
-          <div ref={parentRef} className=" p-4 bg-slate-100  " onClick={handleCopyCode}>
+          <div ref={parentRef} className=" p-4 bg-slate-100 dark:bg-slate-800 rounded-md transition-colors duration-300 " onClick={handleCopyCode}>
             {uploadedImages.map((data, index) => (
               <div key={index} className="mb-2 ">
                 <code className=" w-2 break-all">{`<img src="${data.url}" alt="${data.name}" />`}</code>
@@ -483,18 +484,21 @@ export default function Home() {
 
 
   return (
-    <main className=" overflow-auto h-full flex w-full min-h-screen flex-col items-center justify-between">
-      <header className="fixed top-0 h-[50px] left-0 w-full border-b bg-white flex z-50 justify-center items-center">
-        <nav className="flex justify-between items-center w-full max-w-4xl px-4">图床</nav>
+    <main className=" overflow-auto h-full flex w-full min-h-screen flex-col items-center justify-between bg-white dark:bg-slate-900 text-gray-800 dark:text-gray-100 transition-colors duration-300">
+      <header className="fixed top-0 h-[50px] left-0 w-full border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex z-50 justify-center items-center transition-colors duration-300">
+        <nav className="flex justify-between items-center w-full max-w-4xl px-4">
+          <span className="text-gray-800 dark:text-gray-100 font-medium">图床</span>
+          <ThemeToggle />
+        </nav>
         {renderButton()}
       </header>
       <div className="mt-[60px] w-9/10 sm:w-9/10 md:w-9/10 lg:w-9/10 xl:w-3/5 2xl:w-2/3">
 
         <div className="flex flex-row">
           <div className="flex flex-col">
-            <div className="text-gray-800 text-lg">图片或视频上传
+            <div className="text-gray-800 dark:text-gray-100 text-lg">图片或视频上传
             </div>
-            <div className="mb-4 text-sm text-gray-500">
+            <div className="mb-4 text-sm text-gray-500 dark:text-gray-400">
               上传文件最大 5 MB;本站已托管 <span className="text-cyan-600">{Total}</span> 张图片; 你访问本站的IP是：<span className="text-cyan-600">{IP}</span>
             </div>
           </div>
@@ -503,10 +507,10 @@ export default function Home() {
             <select
               value={selectedOption} // 将选择框的值绑定到状态中的 selectedOption
               onChange={handleSelectChange} // 当选择框的值发生变化时触发 handleSelectChange 函数
-              className="text-lg p-2 border  rounded text-center w-auto sm:w-auto md:w-auto lg:w-auto xl:w-auto  2xl:w-36">
-              <option value="tg" >TG(会失效)</option>
-              <option value="tgchannel">TG_Channel</option>
+              className="text-lg p-2 border border-slate-300 dark:border-slate-600 rounded text-center w-auto sm:w-auto md:w-auto lg:w-auto xl:w-auto 2xl:w-36 bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-100 transition-colors duration-300">
               <option value="r2">R2</option>
+              <option value="tgchannel">TG_Channel</option>
+              <option value="tg" >TG(会失效)</option>
               {/* <option value="vviptuangou">vviptuangou</option> */}
               <option value="58img">58img</option>
               {/* <option value="tencent">tencent</option> */}
@@ -517,7 +521,7 @@ export default function Home() {
 
         </div>
         <div
-          className="border-2 border-dashed border-slate-400 rounded-md relative"
+          className="border-2 border-dashed border-slate-400 dark:border-slate-600 rounded-md relative bg-slate-50 dark:bg-slate-800/50 transition-colors duration-300"
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onPaste={handlePaste}
@@ -576,7 +580,7 @@ export default function Home() {
             {selectedFiles.length === 0 && (
               <div className="absolute -z-10 left-0 top-0 w-full h-full flex items-center justify-center">
 
-                <div className="text-gray-500">
+                <div className="text-gray-500 dark:text-gray-400">
 
                   拖拽文件到这里或将屏幕截图复制并粘贴到此处上传
                 </div>
@@ -603,7 +607,7 @@ export default function Home() {
             />
           </div>
           <div className="md:col-span-5 col-span-8">
-            <div className="w-full h-10 bg-slate-200 leading-10 px-4 text-center md:text-left">
+            <div className="w-full h-10 bg-slate-200 dark:bg-slate-700 leading-10 px-4 text-center md:text-left text-gray-700 dark:text-gray-200 transition-colors duration-300">
               已选择 {selectedFiles.length} 张，共 {getTotalSizeInMB(selectedFiles)} M
             </div>
           </div>
@@ -638,27 +642,27 @@ export default function Home() {
               <div className="flex flex-wrap gap-3 mb-4 border-b border-gray-300 ">
                 <button
                   onClick={() => setActiveTab('preview')}
-                  className={`px-4 py-2 ${activeTab === 'preview' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
+                  className={`px-4 py-2 ${activeTab === 'preview' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-gray-200'}`}>
                   Preview
                 </button>
                 <button
                   onClick={() => setActiveTab('htmlLinks')}
-                  className={`px-4 py-2 ${activeTab === 'htmlLinks' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
+                  className={`px-4 py-2 ${activeTab === 'htmlLinks' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-gray-200'}`}>
                   HTML
                 </button>
                 <button
                   onClick={() => setActiveTab('markdownLinks')}
-                  className={`px-4 py-2 ${activeTab === 'markdownLinks' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
+                  className={`px-4 py-2 ${activeTab === 'markdownLinks' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-gray-200'}`}>
                   Markdown
                 </button>
                 <button
                   onClick={() => setActiveTab('bbcodeLinks')}
-                  className={`px-4 py-2 ${activeTab === 'bbcodeLinks' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
+                  className={`px-4 py-2 ${activeTab === 'bbcodeLinks' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-gray-200'}`}>
                   BBCode
                 </button>
                 <button
                   onClick={() => setActiveTab('viewLinks')}
-                  className={`px-4 py-2 ${activeTab === 'viewLinks' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
+                  className={`px-4 py-2 ${activeTab === 'viewLinks' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-gray-200'}`}>
                   Links
                 </button>
               </div>
@@ -710,7 +714,7 @@ export default function Home() {
 
       )}
 
-      <div className="fixed inset-x-0 bottom-0 h-[50px] bg-slate-200  w-full  flex  z-50 justify-center items-center ">
+      <div className="fixed inset-x-0 bottom-0 h-[50px] bg-slate-200 dark:bg-slate-800 w-full flex z-50 justify-center items-center transition-colors duration-300">
         <Footer />
       </div>
     </main>
