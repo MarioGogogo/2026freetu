@@ -55,14 +55,16 @@ export async function GET(request, { params }) {
     console.log(error);
 
   }
-  // 检查缓存
-  let cachedResponse = await cache.match(cacheKey);
-  if (cachedResponse) {
-    if (!(Referer === `${req_url.origin}/admin` || Referer === `${req_url.origin}/list` || Referer === `${req_url.origin}/`)) {
-      await logRequest(env, name, Referer, clientIp);
+  // 检查缓存 (屏蔽的图片不使用缓存)
+  if (rating !== 3) {
+    let cachedResponse = await cache.match(cacheKey);
+    if (cachedResponse) {
+      if (!(Referer === `${req_url.origin}/admin` || Referer === `${req_url.origin}/list` || Referer === `${req_url.origin}/`)) {
+        await logRequest(env, name, Referer, clientIp);
+      }
+      // 如果缓存中存在，直接返回缓存响应
+      return cachedResponse
     }
-    // 如果缓存中存在，直接返回缓存响应
-    return cachedResponse
   }
 
 
