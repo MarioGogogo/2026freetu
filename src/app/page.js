@@ -11,6 +11,7 @@ import Footer from '@/components/Footer'
 import Link from "next/link";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import ThemeToggle from "@/components/ThemeToggle";
+import { compressImage } from '@/lib/compress';
 
 
 const LoginButton = ({ onClick, href, children }) => (
@@ -33,6 +34,8 @@ export default function Home() {
   const [IP, setIP] = useState('');
   const [Total, setTotal] = useState('?');
   const [selectedOption, setSelectedOption] = useState('r2'); // 初始选择第一个选项
+  const [uploadMode, setUploadMode] = useState('original'); // original=原图上传 compress=压缩上传
+  const [quality, setQuality] = useState(80); // 压缩质量百分比
   const [isAuthapi, setisAuthapi] = useState(false); // 初始选择第一个选项
   const [Loginuser, setLoginuser] = useState(''); // 初始选择第一个选项
   const [boxType, setBoxtype] = useState("img");
@@ -167,9 +170,14 @@ export default function Home() {
 
     try {
       for (const file of filesToUpload) {
+        let fileToUpload = file;
+        if (uploadMode === 'compress') {
+          fileToUpload = await compressImage(file, { quality: quality / 100 });
+        }
+
         const formData = new FormData();
 
-        formData.append(formFieldName, file);
+        formData.append(formFieldName, fileToUpload);
 
         try {
           const targetUrl = selectedOption === "tgchannel" || selectedOption === "r2"
@@ -187,10 +195,10 @@ export default function Home() {
             const result = await response.json();
             // console.log(result);
 
-            file.url = result.url;
+            fileToUpload.url = result.url;
 
             // 更新 uploadedImages 和 selectedFiles
-            setUploadedImages((prevImages) => [...prevImages, file]);
+            setUploadedImages((prevImages) => [...prevImages, fileToUpload]);
             setSelectedFiles((prevFiles) => prevFiles.filter(f => f !== file));
             successCount++;
           } else {
@@ -500,6 +508,9 @@ export default function Home() {
             </div>
             <div className="mb-4 text-sm text-gray-500 dark:text-gray-400">
               上传文件最大 5 MB;本站已托管 <span className="text-cyan-600">{Total}</span> 张图片; 你访问本站的IP是：<span className="text-cyan-600">{IP}</span>
+              {uploadMode === 'compress'
+                ? `；当前模式：压缩上传 —— 自动转为 WebP 格式（GIF 保留原样）、长边 ≤1920px、压缩质量 ${quality}%`
+                : '；当前模式：原图上传 —— 保留原始文件，不做压缩'}
             </div>
           </div>
           <div className="flex  flex-col sm:flex-col   md:w-auto lg:flex-row xl:flex-row  2xl:flex-row  mx-auto items-center  ">
@@ -516,6 +527,35 @@ export default function Home() {
               {/* <option value="tencent">tencent</option> */}
 
             </select>
+          </div>
+          <div className="flex flex-col sm:flex-col md:w-auto lg:flex-col xl:flex-col 2xl:flex-col mx-auto items-center">
+            <div className="flex items-center">
+              <span className=" text-lg sm:text-sm   md:text-sm lg:text-xl xl:text-xl  2xl:text-xl mr-2">上传模式：</span>
+              <button
+                onClick={() => setUploadMode('original')}
+                className={`px-4 py-2 rounded-l ${uploadMode === 'original' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-gray-200'}`}>
+                原图上传
+              </button>
+              <button
+                onClick={() => setUploadMode('compress')}
+                className={`px-4 py-2 rounded-r ${uploadMode === 'compress' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-gray-200'}`}>
+                压缩上传
+              </button>
+            </div>
+            {uploadMode === 'compress' && (
+              <div className="flex items-center mt-2 text-sm text-gray-600 dark:text-gray-300">
+                <span className="mr-2 whitespace-nowrap">压缩质量 {quality}%</span>
+                <input
+                  type="range"
+                  min="10"
+                  max="100"
+                  step="5"
+                  value={quality}
+                  onChange={(e) => setQuality(Number(e.target.value))}
+                  className="w-32 accent-blue-500 cursor-pointer"
+                />
+              </div>
+            )}
           </div>
 
 
