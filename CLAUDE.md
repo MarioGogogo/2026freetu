@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Telegraph-Image: a free image hosting app (图床) deployed on **Cloudflare Pages**. It proxies uploads to `telegra.ph` and Telegram, logs all access to **Cloudflare D1** (SQLite), and exposes an admin panel for image management and content moderation. Built with Next.js 14 App Router running entirely in the **Edge runtime**.
 
-This repo is a localized fork of `x-dr/telegraph-Image` (root `name` is `2026freetu`).
+This repo is a localized fork of `x-dr/telegraph-Image`. Naming: npm package is `image-nextjs`; `2026freetu` is the Wrangler worker name in `wrangler.toml` (which is gitignored but present locally and defines the `IMG` D1 binding used by `npm run d1`).
 
 ## Commands
 
@@ -28,6 +28,8 @@ The app is built for Cloudflare Pages via `@cloudflare/next-on-pages`. Every API
 - Cloudflare environment variables (e.g. `TG_BOT_TOKEN`, `ModerateContentApiKey`, `CUSTOM_DOMAIN`) are read off `env` at runtime.
 
 **Local dev gotcha:** routes that depend on `env.IMG`/bindings will silently degrade in plain `next dev`. The code is written to branch on `if (!env.IMG)` and still serve images by proxying `telegra.ph` directly. Meaningful testing requires deploying to Cloudflare Pages (and setting the `nodejs_compat` compatibility flag per README step 7).
+
+**Local UI preview with mock data:** setting the `USE_MOCK_DATA` env var makes `/api/admin/list`, `/api/admin/log`, and `/api/total` serve fixtures from `src/lib/mock.js` (the mock check runs before `getRequestContext()`, so it works in plain `next dev`). `USE_MOCK_DATA=empty` returns empty datasets to preview the no-data state; anything else gives 23 paginated rows. Only these three routes are mocked — `admin/ip`, `block`, `delete` are not.
 
 ## Architecture
 
@@ -62,9 +64,11 @@ JWT sessions (24h), `secret` from `SECRET` env (fallback default is in `.env.exa
 - `src/app/admin/page.js` — admin dashboard using `src/components/Table.jsx`; calls `/api/admin/*`
 - `src/app/login/page.jsx` + `src/components/SignIn.jsx` — NextAuth sign-in
 - Styling: Tailwind CSS (`tailwind.config.js`); `src/app/layout.js` injects global CSS, Toastify/PhotoView CSS, and Google Analytics (`G-JVKEXR5XSG`).
+- Dark mode: Tailwind `darkMode: 'class'`; `src/components/ThemeToggle.jsx` toggles the `dark` class on `<html>` and persists to `localStorage.theme`.
 
 ## Conventions
 
-- All SQL is written inline per-route; many queries interpolate values directly (e.g. `WHERE url='${url}'`). Prefer the parameterized `.bind()` form (as used in `insertTgImgLog`) when touching these.
+- All SQL is written inline per-route. Read (`SELECT`) and `UPDATE imginfo SET total` queries in `admin/list`, `admin/log`, and the `file`/`cfile`/`rfile` routes already use parameterized `.bind()`. The remaining interpolation lives in the `INSERT INTO imginfo ... VALUES ('${src}', ...)` helper duplicated across the upload routes (`tg`, `58img`, `tencent`, `vviptuangou`, `total`, `ip`, `admin/ip`, `enableauthapi/*`) — prefer converting to `.bind()` when touching these.
 - Helpers like `get_nowTime()` and `getRating()` are duplicated across route files rather than shared — match the local copy's signature when editing.
 - Time is formatted in `Asia/Shanghai` via `Intl.DateTimeFormat`.
+- `AGENTS.md` is a Chinese mirror of this file — keep the two in sync when architecture or conventions change.
