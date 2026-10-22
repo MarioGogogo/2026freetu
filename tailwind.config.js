@@ -8,6 +8,25 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"SF Pro Text"', '"PingFang SC"', '"Hiragino Sans GB"', '"Microsoft YaHei"', 'sans-serif'],
+      },
+      colors: {
+        apple: {
+          blue: '#0071e3',
+          blueHover: '#0077ED',
+          green: '#34c759',
+          red: '#ff3b30',
+          purple: '#af52de',
+          indigo: '#5856d6',
+        },
+      },
+      boxShadow: {
+        glass: '0 8px 32px 0 rgba(0, 0, 0, 0.08)',
+        'glass-hover': '0 12px 40px 0 rgba(0, 0, 0, 0.12)',
+        dock: '0 20px 48px -8px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.25) inset',
+        'ios-card': '0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(255, 255, 255, 0.6) inset',
+      },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic":
