@@ -32,6 +32,42 @@ const fmtMB = (bytes) => {
 
 const getExt = (file) => (file.name.split('.').pop() || '').toUpperCase().slice(0, 4);
 
+// 剪贴板图片统一命名：每次粘贴生成唯一文件名，避免同名文件被去重逻辑过滤
+let clipboardFileSeq = 0;
+const CLIPBOARD_EXT_MAP = {
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/gif': 'gif',
+  'image/webp': 'webp',
+  'image/svg+xml': 'svg',
+  'image/bmp': 'bmp',
+};
+
+const clipboardFileName = (type = 'image/png') => {
+  const ext = CLIPBOARD_EXT_MAP[type] || (type.split('/')[1] || 'png').replace('+', '.');
+  clipboardFileSeq += 1;
+  return `clipboard-${Date.now()}-${String(clipboardFileSeq).padStart(3, '0')}.${ext}`;
+};
+
+// 从 paste 事件的 clipboardData 中提取所有图片文件
+const extractClipboardFiles = (clipboardData) => {
+  const files = [];
+  const items = clipboardData?.items || [];
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    if (item.kind === 'file' && item.type.startsWith('image/')) {
+      const original = item.getAsFile();
+      if (original) {
+        files.push(new File([original], clipboardFileName(original.type), {
+          type: original.type,
+          lastModified: Date.now(),
+        }));
+      }
+    }
+  }
+  return files;
+};
+
 const LoginButton = ({ onClick, href, children }) => {
   const cls = "inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-apple-blue hover:bg-apple-blueHover text-white text-xs font-semibold tracking-wide shadow-sm shadow-blue-500/30 transition transform active:scale-95";
   if (href) {
@@ -64,6 +100,8 @@ export default function Home() {
   const albumInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const fileInputRef = useRef(null);
+  const addFilesRef = useRef(null); // 供全局 paste 监听调用，避免闭包过期
+  const thumbUrlsRef = useRef({}); // 文件名 -> 本地预览 objectURL
 
   let headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
@@ -155,16 +193,53 @@ export default function Home() {
     const filtered = Array.from(incoming).filter(file =>
       !selectedFiles.find(selFile => selFile.name === file.name) &&
       !uploadedImages.find(upImg => upImg.name === file.name));
-    filtered.forEach(loadDims);
+    filtered.forEach((file) => {
+      loadDims(file);
+      // 入队即生成本地预览 blob URL，上传前也能看到缩略图
+      if ((file.type.startsWith('image/') || file.type.startsWith('video/')) && !thumbUrlsRef.current[file.name]) {
+        thumbUrlsRef.current[file.name] = URL.createObjectURL(file);
+      }
+    });
     setSelectedFiles([...selectedFiles, ...filtered]);
   };
+
+  const revokeThumb = (file) => {
+    const url = thumbUrlsRef.current[file.name];
+    if (url) {
+      URL.revokeObjectURL(url);
+      delete thumbUrlsRef.current[file.name];
+    }
+  };
+
+  // 卸载时释放全部预览 blob URL
+  useEffect(() => {
+    return () => {
+      Object.values(thumbUrlsRef.current).forEach(url => URL.revokeObjectURL(url));
+      thumbUrlsRef.current = {};
+    };
+  }, []);
 
   const handleFileChange = (event) => {
     addFiles(event.target.files);
     event.target.value = ''; // 允许重复选择同一文件
   };
 
+  // 全局监听粘贴事件：页面任意位置 Ctrl/Cmd+V 即可添加剪贴板图片
+  useEffect(() => {
+    addFilesRef.current = addFiles;
+  });
+
+  useEffect(() => {
+    const onWindowPaste = (event) => {
+      const files = extractClipboardFiles(event.clipboardData);
+      if (files.length > 0) addFilesRef.current?.(files);
+    };
+    window.addEventListener('paste', onWindowPaste);
+    return () => window.removeEventListener('paste', onWindowPaste);
+  }, []);
+
   const handleClear = () => {
+    selectedFiles.forEach(revokeThumb);
     setSelectedFiles([]);
     setFileMeta({});
   };
@@ -231,6 +306,7 @@ export default function Home() {
             // 更新 uploadedImages 和 selectedFiles
             setUploadedImages((prevImages) => [...prevImages, fileToUpload]);
             setSelectedFiles((prevFiles) => prevFiles.filter(f => f !== file));
+            revokeThumb(file); // 移出队列后释放本地预览
             successCount++;
           } else {
             // 尝试从响应中提取错误信息
@@ -278,15 +354,37 @@ export default function Home() {
     }
   };
 
-  const handlePaste = (event) => {
-    const clipboardItems = event.clipboardData.items;
-
-    for (let i = 0; i < clipboardItems.length; i++) {
-      const item = clipboardItems[i];
-      if (item.kind === 'file' && item.type.includes('image')) {
-        const file = item.getAsFile();
-        if (file) addFiles([file]);
-        break; // 只处理第一个文件
+  // 剪贴板上传：点击按钮主动读取系统剪贴板中的图片加入队列
+  const handleClipboardUpload = async () => {
+    if (!navigator.clipboard?.read) {
+      toast.error('当前浏览器不支持读取剪贴板，请直接按 Ctrl+V 粘贴');
+      return;
+    }
+    try {
+      const clipboardItems = await navigator.clipboard.read();
+      const files = [];
+      for (const clipboardItem of clipboardItems) {
+        const imageType = clipboardItem.types.find(t => t.startsWith('image/'));
+        if (imageType) {
+          const blob = await clipboardItem.getType(imageType);
+          files.push(new File([blob], clipboardFileName(imageType), {
+            type: imageType,
+            lastModified: Date.now(),
+          }));
+        }
+      }
+      if (files.length === 0) {
+        toast.error('剪贴板中没有图片，请先复制一张图片再试');
+        return;
+      }
+      addFiles(files);
+      toast.success(`已从剪贴板添加 ${files.length} 张图片，点击下方按钮开始上传`);
+    } catch (err) {
+      if (err?.name === 'NotAllowedError') {
+        toast.error('剪贴板读取被拒绝，请授权剪贴板权限后重试，或直接按 Ctrl+V 粘贴');
+      } else {
+        console.error('读取剪贴板失败:', err);
+        toast.error('读取剪贴板失败，请直接按 Ctrl+V 粘贴');
       }
     }
   };
@@ -305,8 +403,9 @@ export default function Home() {
   };
 
   const handleRemoveImage = (index) => {
-    const updatedFiles = selectedFiles.filter((_, idx) => idx !== index);
-    setSelectedFiles(updatedFiles);
+    const target = selectedFiles[index];
+    if (target) revokeThumb(target);
+    setSelectedFiles(selectedFiles.filter((_, idx) => idx !== index));
   };
 
   const handleCopy = async (text) => {
@@ -341,7 +440,7 @@ export default function Home() {
           key={`image-${index}`}
           src={data.url}
           alt={`Uploaded ${index}`}
-          className="object-cover w-20 h-20 rounded-xl ring-1 ring-black/10 dark:ring-white/10 flex-shrink-0 cursor-pointer"
+          className="object-cover w-24 h-24 rounded-2xl ring-1 ring-black/10 dark:ring-white/10 flex-shrink-0 cursor-pointer transition hover:ring-2 hover:ring-blue-500/60"
           onClick={() => handlerenderImageClick(data.url)}
         />
       );
@@ -350,7 +449,7 @@ export default function Home() {
         <video
           key={`video-${index}`}
           src={data.url}
-          className="object-cover w-20 h-20 rounded-xl ring-1 ring-black/10 dark:ring-white/10 flex-shrink-0"
+          className="object-cover w-24 h-24 rounded-2xl ring-1 ring-black/10 dark:ring-white/10 flex-shrink-0"
           controls
         >
           Your browser does not support the video tag.
@@ -358,7 +457,7 @@ export default function Home() {
       );
     } else {
       return (
-        <div className="w-20 h-20 rounded-xl bg-slate-200/70 dark:bg-slate-800 flex items-center justify-center text-[10px] text-slate-500 flex-shrink-0 break-all p-1">
+        <div className="w-24 h-24 rounded-2xl bg-slate-200/70 dark:bg-slate-800 flex items-center justify-center text-[10px] text-slate-500 flex-shrink-0 break-all p-1">
           {data.name}
         </div>
       );
@@ -467,16 +566,34 @@ export default function Home() {
     const hasCompressed = meta.compressedSize !== undefined && uploadMode === 'compress';
     const ext = getExt(file);
     const grad = EXT_GRADIENTS[ext] || 'from-slate-400 to-slate-500';
+    const thumbUrl = thumbUrlsRef.current[file.name] || null;
 
     return (
       <article key={index} className="ios-card-glass rounded-2xl p-4 sm:p-5 shadow-ios-card transition duration-200 hover:shadow-glass-hover">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          {/* 图片元信息与类型徽章 */}
+          {/* 本地预览缩略图与文件元信息 */}
           <div className="flex items-center gap-3.5 w-full sm:w-auto min-w-0">
-            <div className={`relative w-14 h-14 rounded-xl overflow-hidden bg-gradient-to-tr ${grad} flex-shrink-0 flex items-center justify-center text-white font-bold shadow-inner border border-white/40`}>
-              <span className="text-xs tracking-wider">{ext || 'FILE'}</span>
-              <div className="absolute inset-0 bg-black/10"></div>
-            </div>
+            {file.type.startsWith('image/') && thumbUrl ? (
+              <img
+                src={thumbUrl}
+                alt={`预览 ${file.name}`}
+                className="w-24 h-24 rounded-2xl object-cover ring-1 ring-black/10 dark:ring-white/10 flex-shrink-0 cursor-pointer transition hover:ring-2 hover:ring-blue-500/60"
+                onClick={() => handlerenderImageClick(thumbUrl)}
+              />
+            ) : file.type.startsWith('video/') && thumbUrl ? (
+              <video
+                src={thumbUrl}
+                className="w-24 h-24 rounded-2xl object-cover ring-1 ring-black/10 dark:ring-white/10 flex-shrink-0"
+                controls
+              >
+                Your browser does not support the video tag.
+              </video>
+            ) : (
+              <div className={`relative w-24 h-24 rounded-2xl overflow-hidden bg-gradient-to-tr ${grad} flex-shrink-0 flex items-center justify-center text-white font-bold shadow-inner border border-white/40`}>
+                <span className="text-sm tracking-wider">{ext || 'FILE'}</span>
+                <div className="absolute inset-0 bg-black/10"></div>
+              </div>
+            )}
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[200px] sm:max-w-xs">
@@ -665,7 +782,6 @@ export default function Home() {
             className="relative group ios-card-glass rounded-3xl p-8 sm:p-12 text-center border-2 border-dashed border-blue-400/40 hover:border-blue-500/80 transition-all duration-300 cursor-pointer overflow-hidden shadow-glass hover:shadow-glass-hover"
             onDrop={handleDrop}
             onDragOver={handleDragOver}
-            onPaste={handlePaste}
             onClick={() => albumInputRef.current?.click()}
           >
             {/* 背景微光脉冲 */}
@@ -684,7 +800,7 @@ export default function Home() {
               <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-6">
                 {uploadMode === 'compress'
                   ? `已开启 WebP/AVIF 智能视觉无损压缩算法，在保证超高画质的同时可显著节约高达 75% 存储与下行带宽`
-                  : '支持图片与视频文件，也可直接粘贴屏幕截图；多选文件批量上传，上传后自动生成多种格式外链'}
+                  : '支持图片与视频文件，可按 Ctrl+V 直接粘贴截图，或点击「剪贴板上传」读取系统剪贴板；多选批量上传，自动生成多种格式外链'}
               </p>
               {/* 快速选取药丸快捷入口 */}
               <div className="flex flex-wrap items-center justify-center gap-2.5">
@@ -697,6 +813,16 @@ export default function Home() {
                     <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></path>
                   </svg>
                   <span>选取相册图片</span>
+                </button>
+                <button
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-slate-200/70 dark:bg-slate-800/80 hover:bg-slate-300/80 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-medium transition"
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); handleClipboardUpload(); }}
+                >
+                  <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 9h4m-4 4h2" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></path>
+                  </svg>
+                  <span>剪贴板上传</span>
                 </button>
                 <button
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-slate-200/70 dark:bg-slate-800/80 hover:bg-slate-300/80 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-medium transition"
