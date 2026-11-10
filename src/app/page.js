@@ -559,7 +559,7 @@ export default function Home() {
     }
   };
 
-  // 队列文件卡片（压缩对比）
+  // 队列文件卡片（纵向布局，一行两列）
   const renderQueueCard = (file, index) => {
     const meta = getMeta(file);
     const saving = savingPct(file);
@@ -569,88 +569,83 @@ export default function Home() {
     const thumbUrl = thumbUrlsRef.current[file.name] || null;
 
     return (
-      <article key={index} className="ios-card-glass rounded-2xl p-4 sm:p-5 shadow-ios-card transition duration-200 hover:shadow-glass-hover">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          {/* 本地预览缩略图与文件元信息 */}
-          <div className="flex items-center gap-3.5 w-full sm:w-auto min-w-0">
-            {file.type.startsWith('image/') && thumbUrl ? (
-              <img
-                src={thumbUrl}
-                alt={`预览 ${file.name}`}
-                className="w-24 h-24 rounded-2xl object-cover ring-1 ring-black/10 dark:ring-white/10 flex-shrink-0 cursor-pointer transition hover:ring-2 hover:ring-blue-500/60"
-                onClick={() => handlerenderImageClick(thumbUrl)}
-              />
-            ) : file.type.startsWith('video/') && thumbUrl ? (
-              <video
-                src={thumbUrl}
-                className="w-24 h-24 rounded-2xl object-cover ring-1 ring-black/10 dark:ring-white/10 flex-shrink-0"
-                controls
-              >
-                Your browser does not support the video tag.
-              </video>
-            ) : (
-              <div className={`relative w-24 h-24 rounded-2xl overflow-hidden bg-gradient-to-tr ${grad} flex-shrink-0 flex items-center justify-center text-white font-bold shadow-inner border border-white/40`}>
-                <span className="text-sm tracking-wider">{ext || 'FILE'}</span>
-                <div className="absolute inset-0 bg-black/10"></div>
-              </div>
-            )}
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[200px] sm:max-w-xs">
-                  {file.name}
-                </h4>
-                {uploadMode === 'compress' ? (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
-                    {hasCompressed ? (saving > 0 ? `节省 ${saving}%` : '保留原样') : '计算中…'}
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 whitespace-nowrap">
-                    {fmtMB(file.size)}
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-slate-400 mt-0.5 truncate">
-                {meta.dims ? `${meta.dims} · ` : ''}
-                {uploadMode === 'compress' ? '智能转换为 WebP' : '保留原始格式'}
-              </p>
-            </div>
-          </div>
+      <article key={index} className="relative ios-card-glass rounded-2xl p-4 shadow-ios-card transition duration-200 hover:shadow-glass-hover flex flex-col">
+        {/* 移除按钮（悬浮右上角） */}
+        <button
+          aria-label="移除当前文件"
+          className="absolute top-2.5 right-2.5 z-10 p-1.5 rounded-full bg-white/80 dark:bg-slate-900/70 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition shadow-sm"
+          type="button"
+          onClick={() => handleRemoveImage(index)}
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></path>
+          </svg>
+        </button>
 
-          {/* 压缩前后体积直观对比条 */}
-          {hasCompressed && saving > 0 && (
-            <div className="w-full sm:w-72 bg-slate-100/70 dark:bg-slate-800/60 p-2.5 rounded-xl border border-black/5 dark:border-white/5 space-y-1.5">
-              <div className="flex items-center justify-between text-xs font-medium">
-                <span className="text-slate-400 line-through">原 {fmtMB(file.size)}</span>
-                <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
-                  <span>新 {fmtMB(meta.compressedSize)}</span>
-                  <svg className="w-3 h-3 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path clipRule="evenodd" d="M16.707 10.293a1 1 0 010 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l4.293-4.293a1 1 0 011.414 0z" fillRule="evenodd"></path>
-                  </svg>
-                </span>
-              </div>
-              <div className="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden flex">
-                <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${100 - saving}%` }}></div>
-                <div className="bg-slate-300 dark:bg-slate-600 h-full opacity-40" style={{ width: `${saving}%` }}></div>
-              </div>
-              <div className="flex justify-between text-[10px] text-slate-400">
-                <span>压缩后体积占比 ({(100 - saving).toFixed(1)}%)</span>
-                <span>已减免 {fmtMB(file.size - meta.compressedSize)}</span>
-              </div>
+        {/* 顶部：预览图 */}
+        <div className="w-full h-44 rounded-xl overflow-hidden bg-slate-100/70 dark:bg-slate-800/60 ring-1 ring-black/5 dark:ring-white/10 mb-3 flex items-center justify-center">
+          {file.type.startsWith('image/') && thumbUrl ? (
+            <img
+              src={thumbUrl}
+              alt={`预览 ${file.name}`}
+              className="w-full h-full object-cover cursor-pointer transition duration-300 hover:scale-[1.03]"
+              onClick={() => handlerenderImageClick(thumbUrl)}
+            />
+          ) : file.type.startsWith('video/') && thumbUrl ? (
+            <video src={thumbUrl} className="w-full h-full object-cover" controls>
+              Your browser does not support the video tag.
+            </video>
+          ) : (
+            <div className={`w-full h-full bg-gradient-to-tr ${grad} flex items-center justify-center text-white font-bold shadow-inner`}>
+              <span className="text-base tracking-wider">{ext || 'FILE'}</span>
             </div>
           )}
-
-          {/* 移除按钮 */}
-          <button
-            aria-label="移除当前文件"
-            className="self-end sm:self-center p-2 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition"
-            type="button"
-            onClick={() => handleRemoveImage(index)}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path d="M6 18L18 6M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></path>
-            </svg>
-          </button>
         </div>
+
+        {/* 中部：文件名 + 状态徽章 */}
+        <div className="flex items-center gap-2 min-w-0">
+          <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate flex-1">
+            {file.name}
+          </h4>
+          {uploadMode === 'compress' ? (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
+              {hasCompressed ? (saving > 0 ? `节省 ${saving}%` : '保留原样') : '计算中…'}
+            </span>
+          ) : (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 whitespace-nowrap">
+              {fmtMB(file.size)}
+            </span>
+          )}
+        </div>
+
+        {/* 底部：尺寸 + 格式说明 */}
+        <p className="text-xs text-slate-400 mt-1 truncate">
+          {meta.dims ? `${meta.dims} · ` : ''}
+          {uploadMode === 'compress' ? '智能转换为 WebP' : '保留原始格式'}
+        </p>
+
+        {/* 压缩前后体积直观对比条（压缩模式） */}
+        {hasCompressed && saving > 0 && (
+          <div className="w-full mt-3 bg-slate-100/70 dark:bg-slate-800/60 p-2.5 rounded-xl border border-black/5 dark:border-white/5 space-y-1.5">
+            <div className="flex items-center justify-between text-xs font-medium">
+              <span className="text-slate-400 line-through">原 {fmtMB(file.size)}</span>
+              <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                <span>新 {fmtMB(meta.compressedSize)}</span>
+                <svg className="w-3 h-3 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path clipRule="evenodd" d="M16.707 10.293a1 1 0 010 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l4.293-4.293a1 1 0 011.414 0z" fillRule="evenodd"></path>
+                </svg>
+              </span>
+            </div>
+            <div className="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden flex">
+              <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${100 - saving}%` }}></div>
+              <div className="bg-slate-300 dark:bg-slate-600 h-full opacity-40" style={{ width: `${saving}%` }}></div>
+            </div>
+            <div className="flex justify-between text-[10px] text-slate-400">
+              <span>压缩后体积占比 ({(100 - saving).toFixed(1)}%)</span>
+              <span>已减免 {fmtMB(file.size - meta.compressedSize)}</span>
+            </div>
+          </div>
+        )}
       </article>
     );
   };
@@ -871,7 +866,9 @@ export default function Home() {
                 </span>
               )}
             </div>
-            {selectedFiles.map((file, index) => renderQueueCard(file, index))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {selectedFiles.map((file, index) => renderQueueCard(file, index))}
+            </div>
           </section>
         )}
 
